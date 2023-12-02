@@ -1,62 +1,107 @@
+
 #include <RCSwitch.h>
-#define svpin (9)
-RCSwitch mySwitch = RCSwitch();
-unsigned long num ;
-
 #include <Servo.h>
-Servo sv1;
 
-int position=0;
-int current = 60;
+RCSwitch mySwitch = RCSwitch();
+Servo myservo[15];
+// Servo myservo9;  
+
+int state = 1;
+unsigned long num ;
+int pos1 = 0;
+int pos2 = 60;
+int prefix = 15;
+bool goleft = false;
+bool inState3 = false;
+
+int current = pos1;
 
 void setup() {
   Serial.begin(9600);
+  Serial.setTimeout(200);
   mySwitch.enableReceive(0);  // Receiver on interrupt 0 => that is pin #2
 
- sv1.attach(svpin);
- 
+  Serial.println("Application start");
+  for(int i=3; i<= 13; i++){
+    myservo[i].attach(i+3);
+  }
 }
 
-
 void loop() {
+  // delay(1000);
+  Serial.print("Current: ");
+  Serial.println(current);
+  Serial.print("State: ");
+  Serial.println(state);
+
   if (mySwitch.available()) {
     
     Serial.print("Received ");
-    Serial.print( mySwitch.getReceivedValue() );
-    Serial.print(" / ");
+    Serial.println( mySwitch.getReceivedValue() );
     num=mySwitch.getReceivedValue();
+    if(num==1480481) state = 1;
+    else
+    if(num==1480482) state = 2;
+    else 
+    if(num==1480483) state = 3;
     mySwitch.resetAvailable();
   }
-  
-  if(num==1480481){
-    for (position=0; position<60;position++){
-      sv1.write(position);
-      delay(70);
-    };
-    num=0;
-  } //thay đổi số tương ứng
-  
-  
-  if(num==1480482){
-    for (int i=0; i<=15; i++){
-      sv1.write(current+i);
-      delay(50);
+  if (state == 1){
+    inState3 = false;
+    if (current!=pos1){
+      if (current > pos1){
+        current = current - 1;
+      }
     }
-    for (int i=15; i>-15; i--){
-      sv1.write(current+i);
-      delay(50);
+  }
+  if (state == 2){
+    inState3 = false;
+    if (current!= pos2){
+      if (current < pos2){
+        current = current+1;
+      }else
+      if (current > pos2){
+        current = current-1;
+      }
     }
-    for (int i=-15; i<0; i++){
-      sv1.write(current+i);
-      delay(50);
+  }
+  if (state == 3){
+    if (inState3 == false){
+      if (current < pos2){
+        current = current+1;
+      }else
+      if (current > pos2){
+        current = current-1;
+      }else
+      if (current == pos2){
+        inState3 = true;
+        goleft = true;
+      }
+    }else{
+      if (goleft == true){
+        current = current+1;
+        if (current == pos2 + prefix){
+          goleft = false;
+        }
+      }else{
+        current = current-1;
+        if (current == pos2 - prefix){
+          goleft = true;
+        }
+      }
     }
-  }//thay đổi số tương ứng
-  
-  if(num==1480484){
-    for (int i=170; i>0; i--){
-      sv1.write(i);
+    for(int i=3; i<= 13; i++){
+      myservo[i].write(current);
+    }
+    if (current < pos2 - prefix){
       delay(10);
-    };
-    num=0;
-  }//thay đổi số tương ứng
+    }else{
+      delay(50);
+    }
+  }else{
+    for(int i=3; i<= 13; i++){
+      myservo[i].write(current);
+    }
+    delay(10);
+  }
 }
