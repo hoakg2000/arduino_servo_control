@@ -1,107 +1,84 @@
-
-#include <RCSwitch.h>
 #include <Servo.h>
+#include <RCSwitch.h>
 
+Servo myservo;
 RCSwitch mySwitch = RCSwitch();
-Servo myservo[15];
-// Servo myservo9;  
 
-int state = 1;
-unsigned long num ;
-int pos1 = 0;
-int pos2 = 60;
-int prefix = 15;
-bool goleft = false;
-bool inState3 = false;
-
-int current = pos1;
+int state = 1; // Initial state
 
 void setup() {
+  myservo.attach(9);  // Attach servo to pin 9
+  mySwitch.enableReceive(0);  // Receiver on interrupt 0
   Serial.begin(9600);
-  Serial.setTimeout(200);
-  mySwitch.enableReceive(0);  // Receiver on interrupt 0 => that is pin #2
-
-  Serial.println("Application start");
-  for(int i=3; i<= 13; i++){
-    myservo[i].attach(i+3);
-  }
 }
 
 void loop() {
-  // delay(1000);
-  Serial.print("Current: ");
-  Serial.println(current);
-  Serial.print("State: ");
-  Serial.println(state);
-
   if (mySwitch.available()) {
-    
-    Serial.print("Received ");
-    Serial.println( mySwitch.getReceivedValue() );
-    num=mySwitch.getReceivedValue();
-    if(num==1480481) state = 1;
-    else
-    if(num==1480482) state = 2;
-    else 
-    if(num==1480483) state = 3;
+    int value = mySwitch.getReceivedValue();
+    if (value == 0) {
+      mySwitch.resetAvailable();
+      return;
+    }
+
+    // Check the received button number
+    switch (value) {
+      case 1480481:
+        state = 1;
+        break;
+      case 1480482:
+        state = 2;
+        break;
+      case 1480484:
+        state = 3;
+        break;
+      default:
+        break;
+    }
+
+    // Perform action based on the state
+    switch (state) {
+      case 1:
+        moveServo(0);
+        break;
+      case 2:
+        moveServo(90);
+        break;
+      case 3:
+        moveServoWithRange(90, 10);
+        break;
+      default:
+        break;
+    }
+
     mySwitch.resetAvailable();
   }
-  if (state == 1){
-    inState3 = false;
-    if (current!=pos1){
-      if (current > pos1){
-        current = current - 1;
-      }
+}
+
+void moveServo(int position) {
+  int currentPos = myservo.read();
+  while (currentPos != position) {
+    if (currentPos < position) {
+      currentPos++;
+    } else {
+      currentPos--;
     }
+    myservo.write(currentPos);
+    delay(15);  // Adjust delay for slower movement
   }
-  if (state == 2){
-    inState3 = false;
-    if (current!= pos2){
-      if (current < pos2){
-        current = current+1;
-      }else
-      if (current > pos2){
-        current = current-1;
-      }
+}
+
+void moveServoWithRange(int position, int range) {
+  int targetPos = position;
+  int currentPos = myservo.read();
+  int step = (currentPos < targetPos) ? 1 : -1;
+
+  while (currentPos != targetPos) {
+    if (abs(currentPos - targetPos) <= range) {
+      currentPos = targetPos;
+    } else {
+      currentPos += step;
     }
-  }
-  if (state == 3){
-    if (inState3 == false){
-      if (current < pos2){
-        current = current+1;
-      }else
-      if (current > pos2){
-        current = current-1;
-      }else
-      if (current == pos2){
-        inState3 = true;
-        goleft = true;
-      }
-    }else{
-      if (goleft == true){
-        current = current+1;
-        if (current == pos2 + prefix){
-          goleft = false;
-        }
-      }else{
-        current = current-1;
-        if (current == pos2 - prefix){
-          goleft = true;
-        }
-      }
-    }
-    for(int i=3; i<= 13; i++){
-      myservo[i].write(current);
-    }
-    if (current < pos2 - prefix){
-      delay(10);
-    }else{
-      delay(50);
-    }
-  }else{
-    for(int i=3; i<= 13; i++){
-      myservo[i].write(current);
-    }
-    delay(10);
+    myservo.write(currentPos);
+    delay(15);  // Adjust delay for slower movement
   }
 }
