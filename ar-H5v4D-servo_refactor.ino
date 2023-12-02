@@ -5,6 +5,7 @@ Servo myservo;
 RCSwitch mySwitch = RCSwitch();
 
 int state = 1; // Initial state
+bool left = false;
 
 void setup() {
   myservo.attach(9);  // Attach servo to pin 9
@@ -30,6 +31,10 @@ void loop() {
         break;
       case 1480484:
         state = 3;
+        if (60 < myservo.read())
+          left = true;
+        else 
+          left = false;
         break;
       default:
         break;
@@ -44,7 +49,7 @@ void loop() {
         moveServo(90);
         break;
       case 3:
-        moveServoWithRange(90, 10);
+        moveServoWithRange(60, 10);
         break;
       default:
         break;
@@ -68,17 +73,16 @@ void moveServo(int position) {
 }
 
 void moveServoWithRange(int position, int range) {
-  int targetPos = position;
   int currentPos = myservo.read();
-  int step = (currentPos < targetPos) ? 1 : -1;
-
-  while (currentPos != targetPos) {
-    if (abs(currentPos - targetPos) <= range) {
-      currentPos = targetPos;
-    } else {
-      currentPos += step;
-    }
-    myservo.write(currentPos);
-    delay(15);  // Adjust delay for slower movement
+  int target = currentPos;
+  if (left){
+    target++;
+  }else{
+    target--;
   }
+  if (abs(target - position) == range){
+    left = !left;
+  }
+  myservo.write(target);
+  delay(50);
 }
