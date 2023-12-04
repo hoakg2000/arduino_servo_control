@@ -33,8 +33,8 @@ void setup() {
 
 void attachServo(){
   int idx = 0;
-  for (int j=3; j<6;j++){
-    myservo[idx].attach(j+5);
+  for (int j=8; j<=10;j++){ // attach servo vào pin 8, 9, 10
+    myservo[idx].attach(j);
     // myservo[idx].write(45);
     // delay(1000);
     if (myservo[idx].attached()){
@@ -103,7 +103,7 @@ void stateOneMode(){
     }
     myservo[i].write(cur);
   }
-  delay(30);
+  delay(30); //delay chuyển từ 2, 3 sang 1
 }
 void stateTwoMode(){
   if (!instate2){
@@ -124,7 +124,7 @@ void stateTwoMode(){
       }
       myservo[i].write(cur);
     }
-    delay(50);
+    delay(50);//delay rung state 2
   }
 }
 
@@ -143,10 +143,10 @@ void moveToPos(int pos){
         servoState[i] = i % 2 == 0;
       }
     }
-    myservo[i].write(cur);
+    myservo[i].write(cur); 
   }
   instate2 = kt;
-  delay(30);
+  delay(30); //delay chuyển từ state 1, 3 sang 2
 }
 
 void stateThreeMode(){
@@ -190,7 +190,7 @@ void stateThreeMode(){
     // Serial.println();
     // delay(1000);
     
-    delay(30);
+    delay(30);// delay chuyển từ state 1, 2 sang 3
   }else{
     for (int i=0; i<servoCount; i++){
       int cur = myservo[i].read();
@@ -208,6 +208,6 @@ void stateThreeMode(){
       myservo[i].write(cur);
       // Serial.println(myservo[i].read());
     }
-    delay(70);
+    delay(70); // delay tăng giảm state 3
   }
 }
