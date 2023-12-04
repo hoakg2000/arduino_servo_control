@@ -163,8 +163,8 @@ void stateThreeMode(){
     l++;
     r--;
     while (l <= r){
-      reach[l] = reach[l-1] + 3;
-      reach[r] = reach[r+1] + 3;
+      reach[l] = reach[l-1] + 3; // biên độ lệch
+      reach[r] = reach[r+1] + 3; 
       servoState[l] = true;
       servoState[r] = true;
       l++;
